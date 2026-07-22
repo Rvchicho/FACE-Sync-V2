@@ -44,7 +44,7 @@ for r in rutas_logo:
 # --- BARRA LATERAL ---
 with st.sidebar:
     if logo_img:
-        st.image(logo_img, use_container_width=True)
+        st.image(logo_img, use_container_width=150)
     
     st.title("⚙️ Panel de Control")
     st.markdown("---")
@@ -114,7 +114,7 @@ def obtener_presupuesto_total_k22(file_plantilla_bytes, df_budget_cat):
         except Exception:
             pass
             
-    return 1564000.0
+    return 1564455.24
 
 
 # --- ENCABEZADO PRINCIPAL ---
