@@ -99,11 +99,11 @@ def cargar_matriz_budget(file_budget_input=None) -> tuple[dict, pd.DataFrame]:
     mapa_cruce = {}
     df_b = pd.DataFrame()
     
-   rutas_posibles = [
-        os.path.join('data', 'FACE MALARIA_pestaña Budget.csv'),
-        os.path.join('data', 'FACE_MALARIA_pestaña_Budget.csv'),
+  rutas_posibles = [
         'FACE MALARIA_pestaña Budget.csv',
-        'FACE_MALARIA_pestaña_Budget.csv'
+        os.path.join('data', 'FACE MALARIA_pestaña Budget.csv'),
+        'Budget.csv',
+        os.path.join('data', 'Budget.csv')
     ]
     
     try:
