@@ -13,9 +13,16 @@ st.set_page_config(page_title="FACE-Sync V2 - PROCOSI", page_icon="📊", layout
 
 # CSS exclusivo para ajustar el tamaño del texto de las tarjetas de métricas
 st.markdown("""
-    
+    <style>
+        [data-testid="stMetricValue"] {
+            font-size: 1.6rem !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.85rem !important;
+        }
+    </style>
 """, unsafe_allow_html=True)
-
 # Búsqueda del logo
 logo_img = None
 rutas_logo = [
