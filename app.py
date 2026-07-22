@@ -11,28 +11,15 @@ from lector_mayor import cargar_mayor_presupuestario, limpiar_monto_boliviano
 
 st.set_page_config(page_title="FACE-Sync V2 - PROCOSI", page_icon="📊", layout="wide")
 
-# --- ESTILOS CSS PERSONALIZADOS (Ajuste de tipografías y márgenes) ---
+# CSS exclusivo para ajustar el tamaño del texto de las tarjetas de métricas
 st.markdown("""
     <style>
-        /* Reducir espacio superior de la barra lateral */
-        [data-testid="stSidebar"] > div:first-child {
-            padding-top: 1.5rem !important;
-        }
-        
-        /* Ajustar tamaño de número en tarjetas métricas para que no se corte (Bs 1,564,450.00) */
         [data-testid="stMetricValue"] {
             font-size: 1.6rem !important;
             font-weight: 700 !important;
         }
-        
-        /* Reducir tamaño de etiqueta superior de las métricas */
         [data-testid="stMetricLabel"] {
             font-size: 0.85rem !important;
-        }
-        
-        /* Reducir espacio del encabezado principal */
-        .block-container {
-            padding-top: 2rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -57,7 +44,7 @@ for r in rutas_logo:
 # --- BARRA LATERAL ---
 with st.sidebar:
     if logo_img:
-        st.image(logo_img, width=170)
+        st.image(logo_img, use_container_width=True)
     
     st.title("⚙️ Panel de Control")
     st.markdown("---")
@@ -130,7 +117,7 @@ def obtener_presupuesto_total_k22(file_plantilla_bytes, df_budget_cat):
     return 1564000.0
 
 
-# --- ENCABEZADO PRINCIPAL (Limpio y sin logo duplicado) ---
+# --- ENCABEZADO PRINCIPAL ---
 st.title("FACE-Sync V2 (PNUD - RED PROCOSI)")
 st.caption("Conector Financiero para la Automatización de Reportes FACE (PNUD)")
 
@@ -177,7 +164,7 @@ if file_mayor:
                         "Expenses (87%)", "VAT Tax (13%)"
                     ]], 
                     use_container_width=True,
-                    height=480
+                    height=500
                 )
 
             with tab_dash:
@@ -229,7 +216,7 @@ if file_mayor:
                         barmode='group',
                         title=f'Comparativa: Presupuesto vs. Ejecución (Activity ID {selected_act})',
                         yaxis_title='Monto (Bs)',
-                        height=300,
+                        height=320,
                         bargap=0.4
                     )
                     st.plotly_chart(fig_comp, use_container_width=True)
