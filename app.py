@@ -31,7 +31,7 @@ for r in rutas_logo:
 # --- BARRA LATERAL ---
 with st.sidebar:
     if logo_img:
-        st.image(logo_img, use_container_width=120)
+        st.image(logo_img, use_container_width=100)
     
     st.title("⚙️ Panel de Control")
     st.markdown("---")
