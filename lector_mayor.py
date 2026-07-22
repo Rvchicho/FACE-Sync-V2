@@ -38,20 +38,21 @@ def parsear_glosa_inteligente(glosa_raw: str) -> dict:
             "invoice_no": "F-0",
             "description": "SIN DESCRIPCION",
             "payment_ref": "N/A",
-            "activity_id": "0"
+            "budget_line": "0"
         }
 
     glosa = str(glosa_raw).strip()
     partes = [p.strip() for p in glosa.split('/') if p.strip()]
 
-    payee, invoice_no, description, payment_ref, activity_id = None, None, None, None, None
+    payee, invoice_no, description, payment_ref, budget_line = None, None, None, None, None
     partes_remanentes = []
 
     for p in partes:
         p_upper = p.upper()
-        if re.match(r'^(ACT|ACTIVIDAD|ACT_ID|A)[\:\s\-]', p_upper):
-            val = re.sub(r'^(ACT|ACTIVIDAD|ACT_ID|A)[\:\s\-]', '', p, flags=re.IGNORECASE).strip()
-            activity_id = normalizar_codigo(val)
+        # Soporte para etiquetas BL, BUDGET LINE, LINEA, ACT o A
+        if re.match(r'^(BL|BUDGET_LINE|LINEA|LINE|ACT|ACTIVIDAD|A)[\:\s\-]', p_upper):
+            val = re.sub(r'^(BL|BUDGET_LINE|LINEA|LINE|ACT|ACTIVIDAD|A)[\:\s\-]', '', p, flags=re.IGNORECASE).strip()
+            budget_line = normalizar_codigo(val)
         elif re.match(r'^(F|FACT|FACTURA)[\:\s\-]', p_upper):
             val = re.sub(r'^(F|FACT|FACTURA)[\:\s\-]', '', p, flags=re.IGNORECASE).strip()
             invoice_no = f"F-{val}" if not val.upper().startswith("F-") else val.upper()
@@ -68,8 +69,9 @@ def parsear_glosa_inteligente(glosa_raw: str) -> dict:
     partes_no_clasificadas = []
     for p in partes_remanentes:
         p_upper = p.upper()
-        if not activity_id and p.isdigit() and 1 <= int(p) <= 200:
-            activity_id = normalizar_codigo(p)
+        # Si encuentra un número entre 1 y 150 sin etiqueta, lo asigna como Budget Line
+        if not budget_line and p.isdigit() and 1 <= int(p) <= 150:
+            budget_line = normalizar_codigo(p)
         elif not invoice_no and re.search(r'(?:FACT|FAC|F)[\.\-\s]*(\d+)', p_upper):
             match = re.search(r'(?:FACT|FAC|F)[\.\-\s]*(\d+)', p_upper)
             invoice_no = f"F-{match.group(1)}"
@@ -90,11 +92,15 @@ def parsear_glosa_inteligente(glosa_raw: str) -> dict:
         "invoice_no": invoice_no if invoice_no else "F-0",
         "description": description if description else (payee if payee else "SIN DESCRIPCION"),
         "payment_ref": payment_ref if payment_ref else "N/A",
-        "activity_id": activity_id if activity_id else "0"
+        "budget_line": budget_line if budget_line else "0"
     }
 
 
 def cargar_matriz_budget(file_budget_input=None) -> tuple[dict, pd.DataFrame]:
+    """
+    Construye el mapa de cruce basado en la clave:
+    (Budget Line No, Account) -> Activity ID
+    """
     mapa_cruce = {}
     df_b = pd.DataFrame()
     
@@ -117,12 +123,12 @@ def cargar_matriz_budget(file_budget_input=None) -> tuple[dict, pd.DataFrame]:
         if not df_b.empty:
             df_b = df_b.dropna(how='all', axis=1).dropna(how='all', axis=0)
             for _, row in df_b.iterrows():
-                act_id = normalizar_codigo(row.get('Activity ID', ''))
-                acc = normalizar_codigo(row.get('UNDP Budget account', ''))
                 b_line = normalizar_codigo(row.get('Budget Line #', ''))
+                acc = normalizar_codigo(row.get('UNDP Budget account', ''))
+                act_id = normalizar_codigo(row.get('Activity ID', ''))
                 
-                if act_id and acc and b_line:
-                    mapa_cruce[(act_id, acc)] = b_line
+                if b_line and acc and act_id:
+                    mapa_cruce[(b_line, acc)] = act_id
     except Exception:
         pass
         
@@ -162,10 +168,11 @@ def cargar_mayor_presupuestario(file_bytes, file_budget_input=None) -> tuple[pd.
             continue
             
         parsed = parsear_glosa_inteligente(glosa)
-        act_id_val = normalizar_codigo(parsed["activity_id"])
+        b_line_val = normalizar_codigo(parsed["budget_line"])
         acc_val = normalizar_codigo(current_account)
         
-        budget_line_calculado = mapa_cruce.get((act_id_val, acc_val), "0")
+        # Obtiene el Activity ID realizando el cruce (Budget Line + Account)
+        act_id_calculado = mapa_cruce.get((b_line_val, acc_val), "0")
 
         fecha_dt = pd.to_datetime(fecha_raw, errors='coerce')
         fecha_val = fecha_dt.date() if pd.notna(fecha_dt) else str(fecha_raw).strip()
@@ -177,12 +184,12 @@ def cargar_mayor_presupuestario(file_bytes, file_budget_input=None) -> tuple[pd.
             "Voucher No": voucher,
             "Fecha": fecha_val,
             "Account": acc_val,
-            "Activity ID": act_id_val,
+            "Activity ID": act_id_calculado,
             "Payee / Vendor": parsed["payee"],
             "Invoice No": parsed["invoice_no"],
             "Description": parsed["description"],
             "Payment / Ref": parsed["payment_ref"],
-            "Budget Line No": budget_line_calculado,
+            "Budget Line No": b_line_val,
             "Payment (Bs)": monto,
             "Expenses (87%)": expenses_87,
             "VAT Tax (13%)": vat_13,
