@@ -10,6 +10,18 @@ import streamlit as st
 from lector_mayor import cargar_mayor_presupuestario, limpiar_monto_boliviano
 
 st.set_page_config(page_title="FACE-Sync V2 - MVP PNUD", page_icon="📊", layout="wide")
+# CSS exclusivo para ajustar el tamaño del texto de las tarjetas de métricas
+st.markdown("""
+    <style>
+        [data-testid="stMetricValue"] {
+            font-size: 1.6rem !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.85rem !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Búsqueda flexible del Logo
 logo_img = None
