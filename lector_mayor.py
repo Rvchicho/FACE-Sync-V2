@@ -30,7 +30,6 @@ def normalizar_codigo(val) -> str:
         val_str = val_str.split('.')[0]
     return val_str
 
-
 def parsear_glosa_inteligente(glosa_raw: str) -> dict:
     if pd.isna(glosa_raw) or not str(glosa_raw).strip():
         return {
