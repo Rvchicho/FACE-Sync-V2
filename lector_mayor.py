@@ -30,6 +30,7 @@ def normalizar_codigo(val) -> str:
         val_str = val_str.split('.')[0]
     return val_str
 
+
 def parsear_glosa_inteligente(glosa_raw: str) -> dict:
     if pd.isna(glosa_raw) or not str(glosa_raw).strip():
         return {
@@ -94,15 +95,14 @@ def parsear_glosa_inteligente(glosa_raw: str) -> dict:
 
 
 def cargar_matriz_budget(file_budget_input=None) -> tuple[dict, pd.DataFrame]:
-    """Busca el archivo de presupuesto local en múltiples rutas posibles."""
     mapa_cruce = {}
     df_b = pd.DataFrame()
     
-  rutas_posibles = [
-        'FACE MALARIA_pestaña Budget.csv',
+    rutas_posibles = [
         os.path.join('data', 'FACE MALARIA_pestaña Budget.csv'),
-        'Budget.csv',
-        os.path.join('data', 'Budget.csv')
+        os.path.join('data', 'FACE_MALARIA_pestaña_Budget.csv'),
+        'FACE MALARIA_pestaña Budget.csv',
+        'FACE_MALARIA_pestaña_Budget.csv'
     ]
     
     try:
@@ -116,7 +116,6 @@ def cargar_matriz_budget(file_budget_input=None) -> tuple[dict, pd.DataFrame]:
             
         if not df_b.empty:
             df_b = df_b.dropna(how='all', axis=1).dropna(how='all', axis=0)
-            
             for _, row in df_b.iterrows():
                 act_id = normalizar_codigo(row.get('Activity ID', ''))
                 acc = normalizar_codigo(row.get('UNDP Budget account', ''))
