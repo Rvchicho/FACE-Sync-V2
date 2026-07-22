@@ -44,7 +44,7 @@ for r in rutas_logo:
 # --- BARRA LATERAL ---
 with st.sidebar:
     if logo_img:
-        st.image(logo_img, use_container_width=150)
+        st.image(logo_img, use_container_width=120)
     
     st.title("⚙️ Panel de Control")
     st.markdown("---")
@@ -118,6 +118,11 @@ def obtener_presupuesto_total_k22(file_plantilla_bytes, df_budget_cat):
 
 
 # --- ENCABEZADO PRINCIPAL ---
+col_head1, col_head2 = st.columns([1, 4])
+with col_head1:
+    if logo_img:
+        st.image(logo_img, width=120)
+with col_head2:
 st.title("FACE-Sync V2 (PNUD - RED PROCOSI)")
 st.caption("Conector Financiero para la Automatización de Reportes FACE (PNUD)")
 
