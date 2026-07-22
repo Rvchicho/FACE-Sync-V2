@@ -9,14 +9,40 @@ import streamlit as st
 
 from lector_mayor import cargar_mayor_presupuestario, limpiar_monto_boliviano
 
-st.set_page_config(page_title="FACE-Sync V2 - MVP PNUD", page_icon="📊", layout="wide")
+st.set_page_config(page_title="FACE-Sync V2 - PROCOSI", page_icon="📊", layout="wide")
 
-# Búsqueda flexible del Logo
+# --- ESTILOS CSS PERSONALIZADOS (Ajuste de tipografías y márgenes) ---
+st.markdown("""
+    <style>
+        /* Reducir espacio superior de la barra lateral */
+        [data-testid="stSidebar"] > div:first-child {
+            padding-top: 1.5rem !important;
+        }
+        
+        /* Ajustar tamaño de número en tarjetas métricas para que no se corte (Bs 1,564,450.00) */
+        [data-testid="stMetricValue"] {
+            font-size: 1.6rem !important;
+            font-weight: 700 !important;
+        }
+        
+        /* Reducir tamaño de etiqueta superior de las métricas */
+        [data-testid="stMetricLabel"] {
+            font-size: 0.85rem !important;
+        }
+        
+        /* Reducir espacio del encabezado principal */
+        .block-container {
+            padding-top: 2rem !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Búsqueda del logo
 logo_img = None
 rutas_logo = [
-    "Logo_PROCOSI_OK_1.png",
     os.path.join("assets", "Logo_PROCOSI_OK_1.png"),
     os.path.join("assets", "logo.png"),
+    "Logo_PROCOSI_OK_1.png",
     "input_file_0.png"
 ]
 
@@ -31,7 +57,7 @@ for r in rutas_logo:
 # --- BARRA LATERAL ---
 with st.sidebar:
     if logo_img:
-        st.image(logo_img, use_container_width=120)
+        st.image(logo_img, width=170)
     
     st.title("⚙️ Panel de Control")
     st.markdown("---")
@@ -89,17 +115,11 @@ def generar_excel_face(plantilla_bytes, df_datos):
 
 
 def obtener_presupuesto_total_k22(file_plantilla_bytes, df_budget_cat):
-    """
-    Mantiene un techo de presupuesto oficial y constante (1.564.000 Bs) 
-    o lo lee directamente de la celda K22 si la plantilla Excel está cargada.
-    """
     if file_plantilla_bytes:
         try:
             wb = openpyxl.load_workbook(io.BytesIO(file_plantilla_bytes), data_only=True)
             nombre_pestana = "SR_Transaction_Details" if "SR_Transaction_Details" in wb.sheetnames else wb.sheetnames[0]
             ws = wb[nombre_pestana]
-            
-            # Celda K22 (Columna K = 11, Fila = 22)
             val_k22 = ws.cell(row=22, column=11).value
             monto_k22 = limpiar_monto_boliviano(val_k22)
             if monto_k22 > 0:
@@ -107,19 +127,12 @@ def obtener_presupuesto_total_k22(file_plantilla_bytes, df_budget_cat):
         except Exception:
             pass
             
-    # Si aún no han subido la plantilla FACE, fijar el Techo Oficial PNUD (1,564,455.24 Bs)
-    # para que la cifra no 'salte' al subir la plantilla
-    return 1564455.24
+    return 1564000.0
 
 
-# --- ENCABEZADO PRINCIPAL ---
-col_head1, col_head2 = st.columns([1, 4])
-with col_head1:
-    if logo_img:
-        st.image(logo_img, width=150)
-with col_head2:
-    st.title("FACE-Sync V2 (PNUD - PROCOSI)")
-    st.caption("Conector Financiero para la Automatización de Reportes FACE (PNUD)")
+# --- ENCABEZADO PRINCIPAL (Limpio y sin logo duplicado) ---
+st.title("FACE-Sync V2 (PNUD - RED PROCOSI)")
+st.caption("Conector Financiero para la Automatización de Reportes FACE (PNUD)")
 
 if file_mayor:
     try:
@@ -141,13 +154,12 @@ if file_mayor:
             else:
                 placeholder_boton.warning("⚠️ Carga la Plantilla FACE para descargar.")
 
-            # Lectura del techo de presupuesto desde la celda K22 de la plantilla (o respaldo en CSV)
             presupuesto_total = obtener_presupuesto_total_k22(plantilla_bytes, df_budget_cat)
             ejecutado_total = df_procesado['Payment (Bs)'].sum()
             porcentaje_avance = (ejecutado_total / presupuesto_total * 100) if presupuesto_total > 0 else 0.0
 
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Presupuesto Total Proyecto ", f"Bs {presupuesto_total:,.2f}" if presupuesto_total > 0 else "N/D")
+            m1.metric("Presupuesto Total Proyecto", f"Bs {presupuesto_total:,.2f}" if presupuesto_total > 0 else "N/D")
             m2.metric("Ejecutado Período", f"Bs {ejecutado_total:,.2f}")
             m3.metric("% Absorción de Fondos", f"{porcentaje_avance:.1f}%" if presupuesto_total > 0 else "N/D")
             m4.metric("Total Transacciones", len(df_procesado))
@@ -165,7 +177,7 @@ if file_mayor:
                         "Expenses (87%)", "VAT Tax (13%)"
                     ]], 
                     use_container_width=True,
-                    height=500
+                    height=480
                 )
 
             with tab_dash:
@@ -203,40 +215,24 @@ if file_mayor:
                 c_kpi1, c_kpi2, c_kpi3 = st.columns(3)
                 c_kpi1.metric("Presupuesto de la Actividad", f"Bs {monto_presupuestado_act:,.2f}" if monto_presupuestado_act > 0 else "N/D")
                 c_kpi2.metric("Monto Ejecutado", f"Bs {monto_ejecutado_act:,.2f}")
-                saldo_act = monto_presupuestado_act - monto_ejecutado_act 
+                saldo_act = monto_presupuestado_act - monto_ejecutado_act
                 c_kpi3.metric("Saldo Disponible", f"Bs {saldo_act:,.2f}" if monto_presupuestado_act > 0 else "N/D")
                 
                 st.markdown("---")
                 
-                # --- EDICIÓN DE LA GRÁFICA COMPARATIVA ---
                 if monto_presupuestado_act > 0 or monto_ejecutado_act > 0:
                     fig_comp = go.Figure(data=[
-                        go.Bar(
-                            name='Presupuesto Aprobado', 
-                            x=[f'Actividad {selected_act}'], 
-                            y=[monto_presupuestado_act], 
-                            marker_color='#1E3A8A'  # <-- CAMBIA AQUÍ EL COLOR (Azul Oscuro)
-                        ),
-                        go.Bar(
-                            name='Monto Ejecutado', 
-                            x=[f'Actividad {selected_act}'], 
-                            y=[monto_ejecutado_act], 
-                            marker_color='#D97706'  # <-- CAMBIA AQUÍ EL COLOR (Naranja / Ámbar)
-                        )
+                        go.Bar(name='Presupuesto Aprobado', x=[f'Actividad {selected_act}'], y=[monto_presupuestado_act], marker_color='#1E3A8A'),
+                        go.Bar(name='Monto Ejecutado', x=[f'Actividad {selected_act}'], y=[monto_ejecutado_act], marker_color='#D97706')
                     ])
                     fig_comp.update_layout(
                         barmode='group',
                         title=f'Comparativa: Presupuesto vs. Ejecución (Activity ID {selected_act})',
                         yaxis_title='Monto (Bs)',
-                        height=300,        # <-- CAMBIA AQUÍ LA ALTURA (en píxeles)
-                        bargap=0.4,        # <-- CAMBIA AQUÍ EL ESPACIO/ANCHO DE LAS BARRAS (0.1 a 0.8)
-                        margin=dict(l=20, r=20, t=40, b=20) # Ajuste de márgenes
+                        height=300,
+                        bargap=0.4
                     )
-                    
-                    # Para controlar el ancho en pantalla:
-                    col_chart, _ = st.columns([2, 1]) # 2/3 del ancho disponible
-                    with col_chart:
-                        st.plotly_chart(fig_comp, use_container_width=True)
+                    st.plotly_chart(fig_comp, use_container_width=True)
                 
                 st.write("#### Transacciones Asociadas a esta Actividad")
                 st.dataframe(df_act_trans[["Voucher No", "Account", "Budget Line No", "Payee / Vendor", "Description", "Payment / Ref", "Payment (Bs)"]], use_container_width=True)
