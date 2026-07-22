@@ -107,7 +107,7 @@ def obtener_presupuesto_total_k22(file_plantilla_bytes, df_budget_cat):
         except Exception:
             pass
             
-    # Si aún no han subido la plantilla FACE, fijar el Techo Oficial PNUD (1,564,000 Bs)
+    # Si aún no han subido la plantilla FACE, fijar el Techo Oficial PNUD (1,564,455.24 Bs)
     # para que la cifra no 'salte' al subir la plantilla
     return 1564455.24
 
